@@ -89,6 +89,7 @@ def main():
     logger_groundtruth = Logger("groundtruth", args.marker_id, args.log_dir)
     logger_broadcasted = Logger("broadcasted", args.marker_id, args.log_dir)
     rate = Rate(args.rate)
+    fixed_rate = Rate(100.0)
 
     while True:
         if qualisys.is_connected:
@@ -142,12 +143,15 @@ def main():
                         pitch,
                         yaw,
                     ]
-                udp_server.broadcast(msg)
-                logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
+                remaining_time_s = rate.remaining()
+                print(remaining_time_s)
+                if remaining_time_s <= 0:
+                    udp_server.broadcast(msg)
+                    logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
+                    rate.reset()
         else:
             print("Qualisys not connected")
-
-        rate.sleep()
+        fixed_rate.sleep()
 
 
 if __name__ == "__main__":

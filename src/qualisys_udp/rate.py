@@ -53,6 +53,12 @@ class Rate:
         curr_time = get_time()
         return self._remaining(curr_time)
 
+    def reset(self):
+        """
+        Reset the rate timer.
+        """
+        self.last_time = get_time()
+
     def sleep(self):
         """
         Attempt sleep at the specified rate. sleep() takes into
