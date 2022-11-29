@@ -28,6 +28,11 @@ options:
 
 ```
 
+## How to use in your own projects
+
+In the examples folders you will find a python example to create a UDP client to read
+the data broadcasted by this software.
+
 ## How to install
 
 Install it using pip:
