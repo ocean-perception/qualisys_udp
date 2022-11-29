@@ -4,8 +4,7 @@ import numpy as np
 from .qualisys import Qualisys
 from .udp_broadcast_server import UDPBroadcastServer
 from .rate import Rate
-
-__all__ = ["Qualisys", "UdpBroadcastServer"]
+from .logger import Logger
 
 
 def main():
@@ -45,7 +44,7 @@ def main():
     parser.add_argument(
         "--noise-position",
         type=float,
-        default=0.05,
+        default=0.03,
         help="Add noise to the broadcasted position",
     )
     parser.add_argument(
@@ -53,6 +52,12 @@ def main():
         type=float,
         default=0.01,
         help="Add noise to the broadcasted orientation",
+    )
+    parser.add_argument(
+        "--log-dir",
+        type=str,
+        default="./logs",
+        help="Log directory",
     )
     args = parser.parse_args()
 
@@ -67,13 +72,15 @@ def main():
 
     qualisys = Qualisys(args.qualisys_ip, args.body_id)
     udp_server = UDPBroadcastServer("255.255.255.255", args.port)
-
+    logger_groundtruth = Logger("groundtruth", args.marker_id, args.log_dir)
+    logger_broadcasted = Logger("broadcasted", args.marker_id, args.log_dir)
     rate = Rate(args.rate)
 
     while True:
         if qualisys.is_connected:
             # Get the last message from the Qualisys server
             msg = qualisys.read()
+            logger_groundtruth.log(msg)
             if len(msg) > 0:
                 stamp_s, x_m, y_m, z_m, roll, pitch, yaw = msg
 
@@ -99,6 +106,7 @@ def main():
                     yaw,
                 ]
                 udp_server.broadcast(msg)
+                logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
         else:
             print("Qualisys not connected")
 
