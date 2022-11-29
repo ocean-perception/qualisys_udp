@@ -1,6 +1,6 @@
 # Qualisys UDP server
 
-UDP server with variable rate and added noise.
+UDP server with variable rate and added noise. Uses [Qualisys Python SDK](https://github.com/qualisys/qualisys_python_sdk).
 
 ## Usage
 
