@@ -59,6 +59,20 @@ def main():
         default="./logs",
         help="Log directory",
     )
+
+    # Position only and orientation only are mutually exclusive
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--position-only",
+        action="store_true",
+        help="Broadcast position only",
+    )
+    group.add_argument(
+        "--orientation-only",
+        action="store_true",
+        help="Broadcast orientation only",
+    )
+
     args = parser.parse_args()
 
     print("\nStarting Qualisys UDP broadcast server")
@@ -95,16 +109,39 @@ def main():
 
                 # Send the message
                 msg = {}
-                msg[args.marker_id] = [
-                    stamp_s,
-                    stamp_s,
-                    x_m,
-                    y_m,
-                    z_m,
-                    roll,
-                    pitch,
-                    yaw,
-                ]
+                if args.position_only:
+                    msg[args.marker_id] = [
+                        stamp_s,
+                        stamp_s,
+                        x_m,
+                        y_m,
+                        z_m,
+                        None,
+                        None,
+                        None,
+                    ]
+                elif args.orientation_only:
+                    msg[args.marker_id] = [
+                        stamp_s,
+                        stamp_s,
+                        None,
+                        None,
+                        None,
+                        roll,
+                        pitch,
+                        yaw,
+                    ]
+                else:
+                    msg[args.marker_id] = [
+                        stamp_s,
+                        stamp_s,
+                        x_m,
+                        y_m,
+                        z_m,
+                        roll,
+                        pitch,
+                        yaw,
+                    ]
                 udp_server.broadcast(msg)
                 logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
         else:
