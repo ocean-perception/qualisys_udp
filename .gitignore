@@ -1,0 +1,7 @@
+logs/*
+*/**/*.egg-info/*
+*.egg-info
+*.pyc
+*.pyo
+*.swp
+*/**/__pycache__
