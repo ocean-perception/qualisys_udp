@@ -26,7 +26,7 @@ def main():
         help="Qualisys body name",
     )
     parser.add_argument(
-        "--marker_id",
+        "--marker-id",
         type=int,
         default=1,
         help="Marker ID to broadcast",
