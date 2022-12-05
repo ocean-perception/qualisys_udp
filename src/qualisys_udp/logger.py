@@ -32,7 +32,7 @@ class Logger:
             file.close()
 
     def log(self, msg):
-        if len(msg) < 7: 
+        if len(msg) < 7:
             return
         stamp_s, x, y, z, roll, pitch, yaw = msg
         # -- Log the detection of the tag
@@ -40,4 +40,4 @@ class Logger:
             writer = csv.writer(file)
             writer.writerow([stamp_s, x, y, z, roll, pitch, yaw])
             file.close()
-        #   print("[", stamp_s, "]", x, y, z, roll, pitch, yaw)
+        # print("[", stamp_s, "]", x, y, z, roll, pitch, yaw)

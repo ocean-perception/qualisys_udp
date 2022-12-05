@@ -2,12 +2,6 @@ import json
 import socket
 
 
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    return s.getsockname()[0]
-
-
 class UDPBroadcastServer:
     def __init__(self, ip, port):
         # -- Enable port reusage
@@ -22,12 +16,9 @@ class UDPBroadcastServer:
         self.ip = ip
         self.port = port
 
-        current_ip = get_ip_address()
-        if self.ip != current_ip:
-            self.ip = current_ip
-
     def broadcast(self, message):
         # -- Broadcast the dictionary as a bytes-like object (string-like info) and empties
+        # print("UDP:", message)
         broadcast_string = json.dumps(message, indent=3)
 
         self.socket.sendto(

@@ -1,5 +1,7 @@
 import argparse
 import numpy as np
+import threading
+
 
 from .qualisys import Qualisys
 from .udp_broadcast_server import UDPBroadcastServer
@@ -18,10 +20,10 @@ def main():
         help="Qualisys IP address",
     )
     parser.add_argument(
-        "--body-id",
-        type=int,
-        default=1,
-        help="Qualisys body ID",
+        "--body-name",
+        type=str,
+        default="MrBuild",
+        help="Qualisys body name",
     )
     parser.add_argument(
         "--marker_id",
@@ -77,19 +79,19 @@ def main():
 
     print("\nStarting Qualisys UDP broadcast server")
     print("  * Qualisys IP: " + str(args.qualisys_ip))
-    print("  * Body ID: " + str(args.body_id))
+    print("  * Body name: " + str(args.body_name))
     print("  * Marker ID: " + str(args.marker_id))
     print("  * UDP port: " + str(args.port))
     print("  * Broadcast rate: " + str(args.rate))
     print("  * Position noise: " + str(args.noise_position))
     print("  * Orientation noise: " + str(args.noise_orientation), end="\n\n")
 
-    qualisys = Qualisys(args.qualisys_ip, args.body_id)
+    qualisys = Qualisys(args.qualisys_ip, args.body_name)
     udp_server = UDPBroadcastServer("255.255.255.255", args.port)
     logger_groundtruth = Logger("groundtruth", args.marker_id, args.log_dir)
     logger_broadcasted = Logger("broadcasted", args.marker_id, args.log_dir)
     rate = Rate(args.rate)
-    fixed_rate = Rate(5.0)
+    fixed_rate = Rate(100.0)
 
     while True:
         if qualisys.is_connected:

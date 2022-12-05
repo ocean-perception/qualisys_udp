@@ -35,15 +35,21 @@ def create_body_index(xml_string):
 
 def is_valid(x):
     valid = (not math.isnan(x)) and type(x) == float
-    valid = valid and (x < 1e6) and (x > -1e6)
     return valid
 
 
+def start_background_loop(event_loop, cls) -> None:
+    asyncio.set_event_loop(event_loop)
+    asyncio.ensure_future(cls.loop())
+    event_loop.run_forever()
+
+
 class Qualisys:
-    def __init__(self, qualisys_ip, marker_id, body_name="MrBuild", parent=None):
+    def __init__(self, qualisys_ip, body_name="MrBuild", parent=None):
+        super(Qualisys, self).__init__()
         if parent is not None:
             self._parent = weakref.ref(parent)
-        self.marker_id = marker_id
+
         self.qualisys_ip = qualisys_ip
         self.body_name = body_name
 
@@ -54,20 +60,24 @@ class Qualisys:
         self.last_msg = None
 
         if qtm_spec is not None:
-            self.client = asyncio.new_event_loop()
-            self.thread = Thread(target=self.start_background_loop)
-            self.thread.daemon = True  # Daemonize thread
+            self.event_loop = asyncio.new_event_loop()
+            self.thread = Thread(
+                target=start_background_loop, args=(self.event_loop, self), daemon=True
+            )
             self.thread.start()
 
-    def start_background_loop(self):
-        asyncio.set_event_loop(self.client)
-        asyncio.ensure_future(self.loop())
-        self.client.run_forever()
+    async def setup(self):
+        connection = await qtm.connect("192.168.60.71")
+        if connection is None:
+            return
+        await connection.stream_frames(
+            frames="frequency:1", components=["6dEuler"], on_packet=self.on_packet
+        )
 
     async def loop(self):
         """Main function"""
         print("Trying to connect to Qualisys server in: " + str(self.qualisys_ip))
-        connection = await qtm.connect(self.qualisys_ip, version=1.20)
+        connection = await qtm.connect(self.qualisys_ip)  # , version=1.20)
 
         if connection is None:
             # TODO: Here we can try to connect to the fake server,
@@ -89,16 +99,13 @@ class Qualisys:
                 )
             )
 
-            self.body_idx = self.body_index[self.body_name]
+            self.body_idx = self.body_index.get(self.body_name)
+            if self.body_idx is None:
+                print("Body name {} not found".format(self.body_name))
+                return
             print("Body index for {}: {}".format(self.body_name, self.body_idx))
-            if self.marker_id != self.body_idx:
-                print(
-                    "WARNING: Marker ID is not the same as the body index. "
-                    "This will cause problems."
-                )
 
             await connection.stream_frames(
-                # frames="frequency:5",
                 components=["6dEuler"],
                 on_packet=self.on_packet,
             )
@@ -107,14 +114,15 @@ class Qualisys:
             return
 
     def on_packet(self, packet):
-        """Callback function that is run when stream-data is triggered by QTM"""
+        # Callback function that is run when stream-data is triggered by QTM
         stamp = datetime.utcnow()
         stamp = datetime.timestamp(stamp)
         _, bodies = packet.get_6d_euler()
-        # print(bodies)
-        if len(bodies) > self.marker_id:
-            position, rotation = bodies[self.marker_id]
+        if len(bodies) > self.body_idx:
+            position, rotation = bodies[self.body_idx]
             self.last_msg = (stamp, position, rotation)
+
+            return
 
     def read(self) -> list[float]:
         if self.last_msg is None:
@@ -148,9 +156,3 @@ class Qualisys:
 
             return stamp_s, x, y, z, roll, pitch, yaw
         return []
-
-    def __del__(self):
-        if self.client.is_running:
-            self.client.stop()
-        if not self.client.is_closed:
-            self.client.close()
