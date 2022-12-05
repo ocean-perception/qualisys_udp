@@ -14,7 +14,7 @@ def main():
     parser.add_argument(
         "--qualisys_ip",
         type=str,
-        default="192.168.0.71",
+        default="192.168.60.71",
         help="Qualisys IP address",
     )
     parser.add_argument(
@@ -89,7 +89,7 @@ def main():
     logger_groundtruth = Logger("groundtruth", args.marker_id, args.log_dir)
     logger_broadcasted = Logger("broadcasted", args.marker_id, args.log_dir)
     rate = Rate(args.rate)
-    fixed_rate = Rate(100.0)
+    fixed_rate = Rate(5.0)
 
     while True:
         if qualisys.is_connected:
@@ -144,7 +144,7 @@ def main():
                         yaw,
                     ]
                 remaining_time_s = rate.remaining()
-                print(remaining_time_s)
+                # print(remaining_time_s)
                 if remaining_time_s <= 0:
                     udp_server.broadcast(msg)
                     logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
