@@ -65,14 +65,19 @@ def main():
     # Position only and orientation only are mutually exclusive
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--position-only",
+        "--position-2d-only",
         action="store_true",
-        help="Broadcast position only",
+        help="Broadcast 2D position only (X, Y)",
+    )
+    group.add_argument(
+        "--position-3d-only",
+        action="store_true",
+        help="Broadcast 3D position only (X, Y, Z)",
     )
     group.add_argument(
         "--orientation-only",
         action="store_true",
-        help="Broadcast orientation only",
+        help="Broadcast orientation only (R, P, Y)",
     )
 
     args = parser.parse_args()
@@ -112,13 +117,24 @@ def main():
 
                 # Send the message
                 msg = {}
-                if args.position_only:
+                if args.position_3d_only:
                     msg[args.marker_id] = [
                         stamp_s,
                         stamp_s,
                         x_m,
                         y_m,
                         z_m,
+                        None,
+                        None,
+                        None,
+                    ]
+                elif args.position_2d_only:
+                    msg[args.marker_id] = [
+                        stamp_s,
+                        stamp_s,
+                        x_m,
+                        y_m,
+                        None,
                         None,
                         None,
                         None,
@@ -146,7 +162,6 @@ def main():
                         yaw,
                     ]
                 remaining_time_s = rate.remaining()
-                # print(remaining_time_s)
                 if remaining_time_s <= 0:
                     udp_server.broadcast(msg)
                     logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
