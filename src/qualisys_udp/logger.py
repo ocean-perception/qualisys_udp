@@ -1,3 +1,4 @@
+import numpy as np
 import csv
 from pathlib import Path
 from datetime import datetime
@@ -21,23 +22,41 @@ class Logger:
             writer.writerow(
                 [
                     "epoch [s]",
+                    "elapsed [s]",
                     "x [m]",
                     "y [m]",
                     "z [m]",
-                    "roll [rad]",
-                    "pitch [rad]",
-                    "yaw [rad]",
+                    "roll [deg]",
+                    "pitch [deg]",
+                    "yaw [deg]",
+                    "broadcasted 1=yes",
                 ]
             )
             file.close()
 
-    def log(self, msg):
+    def log(self, msg, broadcasted=False):
         if len(msg) < 7:
             return
         stamp_s, x, y, z, roll, pitch, yaw = msg
         # -- Log the detection of the tag
         with self.fname.open("a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([stamp_s, x, y, z, roll, pitch, yaw])
+            roll_deg = np.degrees(roll)
+            pitch_deg = np.degrees(pitch)
+            yaw_deg = np.degrees(yaw)
+            broadcasted_0_1 = int(broadcasted)
+            writer.writerow(
+                [
+                    stamp_s,
+                    stamp_s,
+                    x,
+                    y,
+                    z,
+                    roll_deg,
+                    pitch_deg,
+                    yaw_deg,
+                    broadcasted_0_1,
+                ]
+            )
             file.close()
         # print("[", stamp_s, "]", x, y, z, roll, pitch, yaw)

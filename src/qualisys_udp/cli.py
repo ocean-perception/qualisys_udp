@@ -1,6 +1,5 @@
 import argparse
 import numpy as np
-import threading
 
 
 from .qualisys import Qualisys
@@ -101,10 +100,9 @@ def main():
     while True:
         if qualisys.is_connected:
             # Get the last message from the Qualisys server
-            msg = qualisys.read()
-            logger_groundtruth.log(msg)
-            if len(msg) > 0:
-                stamp_s, x_m, y_m, z_m, roll, pitch, yaw = msg
+            original_msg = qualisys.read()
+            if len(original_msg) > 0:
+                stamp_s, x_m, y_m, z_m, roll, pitch, yaw = original_msg
 
                 # Add noise to the position
                 x_m += np.random.normal(0, args.noise_position)
@@ -162,10 +160,14 @@ def main():
                         yaw,
                     ]
                 remaining_time_s = rate.remaining()
+                broadcasted = False
                 if remaining_time_s <= 0:
                     udp_server.broadcast(msg)
                     logger_broadcasted.log([stamp_s, x_m, y_m, z_m, roll, pitch, yaw])
+                    broadcasted = True
                     rate.reset()
+                # Log groundtruth
+                logger_groundtruth.log(original_msg, broadcasted=broadcasted)
         else:
             print("Qualisys not connected")
         fixed_rate.sleep()
